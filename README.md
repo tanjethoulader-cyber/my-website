@@ -26,3 +26,10 @@ The form opens the visitor's configured email application with a prepared messag
 - Repositioned and resized the mobile art caption so it stays to the right of the chip.
 - Slightly adjusted the chip's bottom offset.
 - No copy, portrait, or other section design was removed or changed.
+
+## V10 mobile Lead tracking clearance
+- Reserved a separate bottom row for the Lead tracking badge, below the portrait card.
+- Kept the portrait card near its previous vertical position by top-aligning it with a small top inset.
+- The badge no longer covers the portrait, name, or GOOD WORK call-to-action.
+- Kept the badge and caption side-by-side without overlap at narrow phone widths.
+- Desktop layout and all existing content remain unchanged.

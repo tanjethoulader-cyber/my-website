@@ -628,3 +628,44 @@ button, a { -webkit-tap-highlight-color: transparent; }
     letter-spacing: .35px;
   }
 }
+
+/* ===== V10: separate the Lead tracking badge from portrait content ===== */
+@media (max-width: 560px) {
+  .hero-art {
+    min-height: 430px !important;
+    place-items: start center !important;
+    padding-top: 18px !important;
+    box-sizing: border-box;
+  }
+  .chip-b {
+    top: auto !important;
+    bottom: 10px !important;
+    left: 0 !important;
+    max-width: 140px;
+  }
+  .art-caption {
+    left: 45% !important;
+    right: 0 !important;
+    bottom: 2px !important;
+    width: 55% !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+    font-size: 5px !important;
+    letter-spacing: .5px !important;
+  }
+}
+@media (max-width: 390px) {
+  .hero-art {
+    min-height: 420px !important;
+  }
+  .chip-b {
+    bottom: 10px !important;
+    left: 0 !important;
+  }
+  .art-caption {
+    left: 52% !important;
+    width: 48% !important;
+    font-size: 4.5px !important;
+    letter-spacing: .35px !important;
+  }
+}
