@@ -9,11 +9,13 @@
   const mainNav = document.getElementById("mainNav");
   const navLinks = [...document.querySelectorAll(".nav-link")];
   const progress = document.getElementById("scrollProgress");
+  const touchHalo = document.getElementById("touchHalo");
   const backToTop = document.getElementById("backToTop");
   const form = document.getElementById("contactForm");
   const note = document.getElementById("formNote");
   const portraitCard = document.querySelector(".portrait-card");
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const touchMode = window.matchMedia("(pointer: coarse)").matches;
   let scrollFrame = false;
 
   body.classList.add("js-enabled");
@@ -81,6 +83,55 @@
   backToTop?.addEventListener("click", () => {
     window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
   });
+
+
+  // One soft halo follows the finger. A single RAF update keeps native scrolling smooth.
+  if (touchHalo && touchMode && !reduceMotion) {
+    let touchFrame = 0;
+    let pendingTouch = null;
+    let touchHideTimer = 0;
+
+    const queueHaloPosition = touch => {
+      pendingTouch = { x: touch.clientX, y: touch.clientY };
+      if (touchFrame) return;
+      touchFrame = window.requestAnimationFrame(() => {
+        if (pendingTouch) {
+          touchHalo.style.setProperty("--touch-x", `${pendingTouch.x}px`);
+          touchHalo.style.setProperty("--touch-y", `${pendingTouch.y}px`);
+        }
+        pendingTouch = null;
+        touchFrame = 0;
+      });
+    };
+
+    const showHalo = touch => {
+      window.clearTimeout(touchHideTimer);
+      queueHaloPosition(touch);
+      touchHalo.classList.add("is-active");
+      touchHalo.classList.remove("is-pulsing");
+      window.requestAnimationFrame(() => touchHalo.classList.add("is-pulsing"));
+    };
+
+    const hideHalo = () => {
+      window.clearTimeout(touchHideTimer);
+      touchHideTimer = window.setTimeout(() => {
+        touchHalo.classList.remove("is-active");
+      }, 150);
+    };
+
+    window.addEventListener("touchstart", event => {
+      if (event.touches[0]) showHalo(event.touches[0]);
+    }, { passive: true });
+
+    window.addEventListener("touchmove", event => {
+      if (event.touches[0]) queueHaloPosition(event.touches[0]);
+    }, { passive: true });
+
+    window.addEventListener("touchend", hideHalo, { passive: true });
+    window.addEventListener("touchcancel", hideHalo, { passive: true });
+  } else if (touchHalo) {
+    touchHalo.remove();
+  }
 
   // Reveal sections as they enter the screen, respecting reduced-motion preferences.
   const revealItems = [...document.querySelectorAll(".reveal")];
