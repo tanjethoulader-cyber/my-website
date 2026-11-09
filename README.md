@@ -1,18 +1,17 @@
 # Tanjet Hawlader — Personal Portfolio
 
-A responsive personal portfolio built with HTML, CSS and vanilla JavaScript.
+Responsive personal portfolio built with HTML, CSS and vanilla JavaScript.
 
-## GitHub / Vercel update
-Extract this ZIP and upload all files directly to the existing repository root. Replace files with matching names and include `profile-photo.webp`. Do not upload the ZIP itself. Commit to `main`; Vercel can redeploy automatically when its GitHub integration is connected.
+## Update the existing GitHub repository
+Extract this ZIP and upload all files directly to the repository root, replacing files with matching names. Include `profile-photo.webp`. Do not upload the ZIP itself. Commit to `main`; Vercel can redeploy automatically when its GitHub integration is connected.
 
-## Included
-- Professional portrait and responsive desktop, tablet and phone layouts
-- Animated TH monogram and compact sticky header
-- Lightweight electric touch trail with thin, low-brightness sparks
-- Throttled touch rendering, capped particles and reduced canvas resolution for smoother scrolling
-- Soft touch glow, scroll-progress rail, section reveal and active navigation
-- Desktop portrait tilt, tap feedback, back-to-top control and dark/light theme
-- Downloadable CV
+## V6 interaction update
+- Removed the electric Canvas, touch spark trail and touch glow completely.
+- Removed scroll-linked portrait movement and repeated scroll timers.
+- Removed JavaScript-generated click ripple elements.
+- Replaced them with opacity-only section reveals, a thin top progress line, and simple CSS tap/active feedback.
+- Disabled continuous portrait floating and header backdrop blur on mobile to reduce rendering work.
+- Kept the responsive layout, portrait, navigation, theme toggle, CV and contact form.
 
 ## Contact form
 The form opens the visitor's configured email application with a prepared message. It does not send or store messages on a server. Direct website submissions require a backend or form service.

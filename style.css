@@ -153,20 +153,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .service-card:active, .btn:active, .theme-toggle:active, .menu-toggle:active {
   transform: scale(.975);
 }
-.ripple-target { position: relative; isolation: isolate; overflow: hidden; }
-.click-ripple {
-  position: absolute;
-  z-index: 5;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  pointer-events: none;
-  background: rgba(200,255,97,.42);
-  transform: translate(-50%, -50%) scale(0);
-  animation: clickRipple .62s ease-out forwards;
-}
-@keyframes clickRipple {
-  to { transform: translate(-50%, -50%) scale(13); opacity: 0; }
+
 }
 .back-to-top {
   position: fixed;
@@ -485,29 +472,52 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .footer .brand-mark { width: 38px; height: 38px; }
 
 
-/* Electric touch trail: visual-only overlay, never blocks native scrolling. */
-.electric-canvas {
-  display: none;
-  position: fixed;
-  z-index: 920;
-  inset: 0;
+/* ===== V6: smooth, low-cost interactions ===== */
+.scroll-progress {
   width: 100%;
-  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  box-shadow: 0 0 8px rgba(200,255,97,.38);
   pointer-events: none;
-  mix-blend-mode: screen;
+}
+.reveal {
+  transform: none !important;
+  transition: opacity .32s ease !important;
+}
+.js-enabled .reveal {
+  will-change: auto !important;
+  opacity: 0;
+}
+.js-enabled .reveal.visible {
+  opacity: 1;
+  transform: none !important;
+}
+.brand-mark::after {
+  animation: none !important;
+  opacity: 0 !important;
+}
+.brand:active .brand-mark {
+  transform: scale(.96);
+  border-color: var(--accent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 0 0 3px rgba(200,255,97,.08);
+}
+.service-card:active,
+.timeline-card:active,
+.education-item:active,
+.extra-card:active {
+  transform: scale(.995);
 }
 @media (max-width: 800px) {
-  .electric-canvas { display: block; }
-  .touch-glow {
-    width: 104px;
-    height: 104px;
-    opacity: 0;
-    background: radial-gradient(circle, rgba(200,255,97,.105) 0%, rgba(89,214,255,.055) 30%, transparent 70%);
-    transition: opacity .18s ease, transform .2s ease;
+  .header {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
-  .touch-glow.active { opacity: .58; }
+  .portrait-card {
+    animation: none !important;
+    will-change: auto !important;
+    transition: none !important;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .electric-canvas { display: none; }
+  .reveal { opacity: 1 !important; }
 }
-
