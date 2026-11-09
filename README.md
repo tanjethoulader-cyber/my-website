@@ -1,27 +1,17 @@
-TANJET HAWLADER — PERSONAL PORTFOLIO
-====================================
+# Tanjet Hawlader — Personal Portfolio
 
-HOW TO OPEN (WINDOWS)
-1. Download this ZIP to your computer.
-2. Right-click the ZIP and choose "Extract All...".
-3. Open the extracted folder.
-4. Double-click "START PORTFOLIO.bat".
-   Or double-click index.html.
+## GitHub repository layout (all files in the root)
+Keep every file in this package at the same level. No `css`, `js`, or `assets` folders are required.
 
-IMPORTANT
-Do not preview/open index.html from inside the ZIP.
-Extract the entire ZIP first. Keep index.html beside the css, js and assets folders.
+- `index.html` — website page
+- `style.css` — design and responsive layout
+- `main.js` — navigation, theme, scroll and contact interactions
+- `Tanjet-Hawlader-CV.pdf` — CV download
+- `favicon.svg` — browser icon
+- `og-cover.svg` — social sharing image
+- `START PORTFOLIO.bat` — opens the site locally on Windows
 
-PROJECT FILES
-- index.html — website structure
-- css/style.css — responsive design
-- js/main.js — menu, theme, scroll and contact interactions
-- assets/Tanjet-Hawlader-CV.pdf — CV download
-- assets/favicon.svg — browser icon
-- assets/og-cover.svg — social sharing cover
-- START PORTFOLIO.bat — opens the website in your default browser
+## GitHub Pages
+In the repository, open Settings → Pages. Under Build and deployment, choose Deploy from a branch, select `main` and `/ (root)`, then Save. Wait for GitHub Pages to publish the site.
 
-CONTACT FORM
-The contact form opens the visitor's email app with a prepared message. It does not store or send messages through a server. Direct server-side submissions require a backend/form service.
-
-The content is based on the supplied CV. Check phone, email and LinkedIn details before publishing.
+The contact form opens the visitor's email application; it does not store messages on a server.

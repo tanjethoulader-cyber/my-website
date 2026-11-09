@@ -9,13 +9,17 @@
   const progress = document.getElementById("scrollProgress");
   const form = document.getElementById("contactForm");
   const note = document.getElementById("formNote");
+  // Keep all page content visible if JavaScript is unavailable; animate only when JS runs.
+  body.classList.add("js-enabled");
 
-  // Restore the visitor's last selected theme.
-  if (localStorage.getItem("tanjet-portfolio-theme") === "light") body.classList.add("light-theme");
+  // Restore the visitor's last selected theme (safe for local file:// previews).
+  let savedTheme = null;
+  try { savedTheme = window.localStorage.getItem("tanjet-portfolio-theme"); } catch (_) {}
+  if (savedTheme === "light") body.classList.add("light-theme");
   themeToggle?.addEventListener("click", () => {
     body.classList.toggle("light-theme");
     const theme = body.classList.contains("light-theme") ? "light" : "dark";
-    localStorage.setItem("tanjet-portfolio-theme", theme);
+    try { window.localStorage.setItem("tanjet-portfolio-theme", theme); } catch (_) {}
     themeToggle.setAttribute("aria-label", `Switch to ${theme === "light" ? "dark" : "light"} theme`);
   });
 
