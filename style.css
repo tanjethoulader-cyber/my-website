@@ -483,3 +483,28 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 
 .footer .brand-mark { width: 38px; height: 38px; }
+
+
+/* Electric touch trail: visual-only overlay, never blocks native scrolling. */
+.electric-canvas {
+  display: none;
+  position: fixed;
+  z-index: 920;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+@media (max-width: 800px) {
+  .electric-canvas { display: block; }
+  .touch-glow {
+    width: 128px;
+    height: 128px;
+    background: radial-gradient(circle, rgba(200,255,97,.2) 0%, rgba(89,214,255,.12) 32%, transparent 72%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .electric-canvas { display: none; }
+}
+

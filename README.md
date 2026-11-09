@@ -9,8 +9,8 @@ Extract this ZIP and upload all files directly to the existing repository root. 
 - Professional portrait, optimized for web
 - Responsive desktop, tablet and phone layouts
 - Animated TH monogram and compact sticky header
-- Touch-following ambient light and gentle portrait drift on phone scroll
-- Mobile scroll-progress rail, section reveal and active navigation
+- Electric spark trail that follows touch and finger scrolling on phones
+- Soft touch glow, scroll-progress rail, section reveal and active navigation
 - Desktop portrait tilt, tap feedback and back-to-top control
 - Dark/light theme and downloadable CV
 

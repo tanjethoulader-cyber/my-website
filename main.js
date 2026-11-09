@@ -12,6 +12,7 @@
   const progress = document.getElementById("scrollProgress");
   const scrollRail = document.getElementById("scrollRail");
   const touchGlow = document.getElementById("touchGlow");
+  const electricCanvas = document.getElementById("electricCanvas");
   const backToTop = document.getElementById("backToTop");
   const form = document.getElementById("contactForm");
   const note = document.getElementById("formNote");
@@ -138,7 +139,7 @@
     document.querySelectorAll("main section[id]").forEach(section => sectionObserver.observe(section));
   }
 
-  // On phones, a soft light follows the finger during a swipe or scroll.
+  // Electric finger trail: visual only, passive touch listeners preserve native page scrolling.
   const moveTouchGlow = (x, y) => {
     if (!touchGlow || reduceMotion) return;
     touchGlow.style.left = `${x}px`;
@@ -147,23 +148,201 @@
     window.clearTimeout(touchFadeTimer);
     touchFadeTimer = window.setTimeout(() => touchGlow.classList.remove("active"), 260);
   };
-  if (touchMode && touchGlow && !reduceMotion) {
-    document.addEventListener("pointermove", event => {
-      if (event.pointerType === "touch") moveTouchGlow(event.clientX, event.clientY);
+
+  if (touchMode && electricCanvas && !reduceMotion) {
+    const ctx = electricCanvas.getContext("2d", { alpha: true });
+    const particles = [];
+    const arcs = [];
+    const maxParticles = 180;
+    const maxArcs = 16;
+    let canvasWidth = 0;
+    let canvasHeight = 0;
+    let pixelRatio = 1;
+    let electricFrame = 0;
+    let lastTouch = null;
+
+    const resizeElectricCanvas = () => {
+      pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+      canvasWidth = window.innerWidth;
+      canvasHeight = window.innerHeight;
+      electricCanvas.width = Math.round(canvasWidth * pixelRatio);
+      electricCanvas.height = Math.round(canvasHeight * pixelRatio);
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    };
+    resizeElectricCanvas();
+    window.addEventListener("resize", resizeElectricCanvas, { passive: true });
+
+    const randomBetween = (min, max) => min + Math.random() * (max - min);
+
+    const requestElectricFrame = () => {
+      if (!electricFrame) electricFrame = window.requestAnimationFrame(drawElectricFrame);
+    };
+
+    const addSpark = (x, y, power = 1) => {
+      const angle = randomBetween(0, Math.PI * 2);
+      const speed = randomBetween(0.7, 3.2) * power;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - randomBetween(0.1, 1.1),
+        life: randomBetween(16, 30),
+        maxLife: 30,
+        size: randomBetween(0.7, 2.2),
+        color: Math.random() > 0.45 ? "200,255,97" : "112,222,255"
+      });
+      if (particles.length > maxParticles) particles.splice(0, particles.length - maxParticles);
+    };
+
+    const addBurst = (x, y, count = 12) => {
+      for (let i = 0; i < count; i++) addSpark(x, y, randomBetween(0.7, 1.5));
+      arcs.push({
+        points: Array.from({ length: 5 }, (_, i) => ({
+          x: x + Math.cos(i * Math.PI / 2) * randomBetween(2, 16),
+          y: y + Math.sin(i * Math.PI / 2) * randomBetween(2, 16)
+        })),
+        life: 12,
+        maxLife: 12,
+        color: "200,255,97"
+      });
+      if (arcs.length > maxArcs) arcs.shift();
+      requestElectricFrame();
+    };
+
+    const addElectricArc = (from, to) => {
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance < 5) return;
+
+      const segments = Math.max(4, Math.min(10, Math.round(distance / 15)));
+      const points = [{ x: from.x, y: from.y }];
+      for (let i = 1; i < segments; i++) {
+        const ratio = i / segments;
+        const offset = randomBetween(-8, 8);
+        const length = Math.max(1, distance);
+        points.push({
+          x: from.x + dx * ratio + (-dy / length) * offset,
+          y: from.y + dy * ratio + (dx / length) * offset
+        });
+      }
+      points.push({ x: to.x, y: to.y });
+      arcs.push({
+        points,
+        life: 10,
+        maxLife: 10,
+        color: Math.random() > 0.35 ? "112,222,255" : "200,255,97"
+      });
+      if (arcs.length > maxArcs) arcs.shift();
+
+      const sparkCount = Math.min(9, Math.max(3, Math.round(distance / 12)));
+      for (let i = 0; i < sparkCount; i++) {
+        const ratio = (i + Math.random()) / sparkCount;
+        addSpark(from.x + dx * ratio, from.y + dy * ratio, 0.85);
+      }
+      requestElectricFrame();
+    };
+
+    const drawElectricFrame = () => {
+      electricFrame = 0;
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      for (let i = arcs.length - 1; i >= 0; i--) {
+        const arc = arcs[i];
+        const alpha = Math.max(0, arc.life / arc.maxLife);
+        const points = arc.points;
+        if (points.length > 1) {
+          ctx.beginPath();
+          ctx.moveTo(points[0].x, points[0].y);
+          for (let j = 1; j < points.length; j++) ctx.lineTo(points[j].x, points[j].y);
+          ctx.strokeStyle = `rgba(${arc.color},${alpha * 0.28})`;
+          ctx.lineWidth = 7;
+          ctx.shadowColor = `rgba(${arc.color},${alpha})`;
+          ctx.shadowBlur = 15;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(points[0].x, points[0].y);
+          for (let j = 1; j < points.length; j++) ctx.lineTo(points[j].x, points[j].y);
+          ctx.strokeStyle = `rgba(${arc.color},${alpha * 0.9})`;
+          ctx.lineWidth = 1.7;
+          ctx.shadowBlur = 8;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(points[0].x, points[0].y);
+          for (let j = 1; j < points.length; j++) ctx.lineTo(points[j].x, points[j].y);
+          ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.7})`;
+          ctx.lineWidth = 0.65;
+          ctx.shadowBlur = 3;
+          ctx.stroke();
+        }
+        arc.life -= 1;
+        if (arc.life <= 0) arcs.splice(i, 1);
+      }
+
+      ctx.shadowBlur = 10;
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const spark = particles[i];
+        const alpha = Math.max(0, spark.life / spark.maxLife);
+        spark.x += spark.vx;
+        spark.y += spark.vy;
+        spark.vx *= 0.965;
+        spark.vy = spark.vy * 0.965 + 0.035;
+
+        ctx.beginPath();
+        ctx.arc(spark.x, spark.y, spark.size * alpha, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${spark.color},${alpha})`;
+        ctx.shadowColor = `rgba(${spark.color},${alpha})`;
+        ctx.fill();
+
+        spark.life -= 1;
+        if (spark.life <= 0) particles.splice(i, 1);
+      }
+
+      ctx.restore();
+      if (arcs.length || particles.length) electricFrame = window.requestAnimationFrame(drawElectricFrame);
+    };
+
+    const getTouchPoint = touch => ({ x: touch.clientX, y: touch.clientY });
+
+    document.addEventListener("touchstart", event => {
+      const finger = event.changedTouches && event.changedTouches[0];
+      if (!finger) return;
+      lastTouch = getTouchPoint(finger);
+      moveTouchGlow(lastTouch.x, lastTouch.y);
+      addBurst(lastTouch.x, lastTouch.y, 15);
     }, { passive: true });
-    // touchmove is retained as a fallback for browsers that cancel pointer events when native scrolling starts.
+
     document.addEventListener("touchmove", event => {
       const finger = event.touches && event.touches[0];
-      if (finger) moveTouchGlow(finger.clientX, finger.clientY);
+      if (!finger) return;
+      const point = getTouchPoint(finger);
+      moveTouchGlow(point.x, point.y);
+      if (lastTouch) addElectricArc(lastTouch, point);
+      lastTouch = point;
     }, { passive: true });
-    document.addEventListener("touchend", () => {
+
+    document.addEventListener("touchend", event => {
+      const finger = event.changedTouches && event.changedTouches[0];
+      const point = finger ? getTouchPoint(finger) : lastTouch;
+      if (point) addBurst(point.x, point.y, 10);
+      lastTouch = null;
       window.clearTimeout(touchFadeTimer);
-      touchFadeTimer = window.setTimeout(() => touchGlow.classList.remove("active"), 180);
+      touchFadeTimer = window.setTimeout(() => touchGlow?.classList.remove("active"), 220);
     }, { passive: true });
-    document.addEventListener("pointercancel", () => touchGlow.classList.remove("active"), { passive: true });
+
+    document.addEventListener("touchcancel", () => {
+      lastTouch = null;
+      window.clearTimeout(touchFadeTimer);
+      touchFadeTimer = window.setTimeout(() => touchGlow?.classList.remove("active"), 120);
+    }, { passive: true });
   }
 
-  // Desktop-only pointer tilt; phones use the calmer scroll-linked movement above.
+    // Desktop-only pointer tilt; phones use the calmer scroll-linked movement above.
   if (portraitCard && window.matchMedia("(pointer: fine)").matches && !reduceMotion) {
     portraitCard.addEventListener("pointermove", event => {
       const rect = portraitCard.getBoundingClientRect();
