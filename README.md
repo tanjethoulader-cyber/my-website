@@ -1,17 +1,33 @@
 # Tanjet Hawlader — Personal Portfolio
 
-## GitHub repository layout (all files in the root)
-Keep every file in this package at the same level. No `css`, `js`, or `assets` folders are required.
+Responsive, mobile-first personal portfolio built with HTML, CSS and vanilla JavaScript.
 
-- `index.html` — website page
-- `style.css` — design and responsive layout
-- `main.js` — navigation, theme, scroll and contact interactions
-- `Tanjet-Hawlader-CV.pdf` — CV download
-- `favicon.svg` — browser icon
-- `og-cover.svg` — social sharing image
-- `START PORTFOLIO.bat` — opens the site locally on Windows
+## Upload to the existing GitHub repository
+Extract this ZIP and upload/replace these files directly in the repository root:
+- `index.html`
+- `style.css`
+- `main.js`
+- `profile-photo.webp`
+- `README.md`
+- `Tanjet-Hawlader-CV.pdf`
+- `favicon.svg`
+- `og-cover.svg`
+- `START PORTFOLIO.bat`
 
-## GitHub Pages
-In the repository, open Settings → Pages. Under Build and deployment, choose Deploy from a branch, select `main` and `/ (root)`, then Save. Wait for GitHub Pages to publish the site.
+Do not upload the ZIP itself. Keep the files together at the repository root. The existing Vercel project should redeploy automatically after the GitHub commit if its Git integration is connected.
 
-The contact form opens the visitor's email application; it does not store messages on a server.
+## Features
+- Optimized professional portrait photo
+- Responsive navigation and layouts for mobile, tablet and desktop
+- Dark/light theme toggle
+- Scroll progress indicator and active navigation section
+- Staggered scroll reveal animations
+- Subtle desktop portrait tilt
+- Click ripple feedback on interactive controls
+- Back-to-top control
+- Downloadable CV
+
+## Contact form
+The current form opens the visitor's configured email app with a prepared message (`mailto:`). It does not send or store messages on a server. A backend or form service is required for direct submissions.
+
+Content is based on the supplied CV. Verify contact details before public sharing.
