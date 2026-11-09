@@ -139,207 +139,199 @@
     document.querySelectorAll("main section[id]").forEach(section => sectionObserver.observe(section));
   }
 
-  // Electric finger trail: visual only, passive touch listeners preserve native page scrolling.
+  // Lightweight electric touch trail. Passive listeners keep native scrolling in control.
   const moveTouchGlow = (x, y) => {
     if (!touchGlow || reduceMotion) return;
     touchGlow.style.left = `${x}px`;
     touchGlow.style.top = `${y}px`;
     touchGlow.classList.add("active");
     window.clearTimeout(touchFadeTimer);
-    touchFadeTimer = window.setTimeout(() => touchGlow.classList.remove("active"), 260);
+    touchFadeTimer = window.setTimeout(() => touchGlow.classList.remove("active"), 190);
   };
 
   if (touchMode && electricCanvas && !reduceMotion) {
-    const ctx = electricCanvas.getContext("2d", { alpha: true });
-    const particles = [];
-    const arcs = [];
-    const maxParticles = 180;
-    const maxArcs = 16;
-    let canvasWidth = 0;
-    let canvasHeight = 0;
-    let pixelRatio = 1;
-    let electricFrame = 0;
-    let lastTouch = null;
+    const ctx = electricCanvas.getContext("2d", { alpha: true, desynchronized: true });
+    if (ctx) {
+      const particles = [];
+      const arcs = [];
+      const MAX_PARTICLES = 34;
+      const MAX_ARCS = 5;
+      const MIN_MOVE_DISTANCE = 13;
+      const MOVE_INTERVAL = 34; // Cap touch drawing to about 29 updates/second.
+      let width = 0;
+      let height = 0;
+      let dpr = 1;
+      let frameId = 0;
+      let lastPoint = null;
+      let lastDrawAt = 0;
 
-    const resizeElectricCanvas = () => {
-      pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
-      canvasWidth = window.innerWidth;
-      canvasHeight = window.innerHeight;
-      electricCanvas.width = Math.round(canvasWidth * pixelRatio);
-      electricCanvas.height = Math.round(canvasHeight * pixelRatio);
-      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    };
-    resizeElectricCanvas();
-    window.addEventListener("resize", resizeElectricCanvas, { passive: true });
+      const resizeCanvas = () => {
+        dpr = Math.min(window.devicePixelRatio || 1, 1);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        electricCanvas.width = Math.round(width * dpr);
+        electricCanvas.height = Math.round(height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas, { passive: true });
 
-    const randomBetween = (min, max) => min + Math.random() * (max - min);
+      const random = (min, max) => min + Math.random() * (max - min);
+      const scheduleFrame = () => {
+        if (!frameId) frameId = requestAnimationFrame(renderElectricTrail);
+      };
 
-    const requestElectricFrame = () => {
-      if (!electricFrame) electricFrame = window.requestAnimationFrame(drawElectricFrame);
-    };
-
-    const addSpark = (x, y, power = 1) => {
-      const angle = randomBetween(0, Math.PI * 2);
-      const speed = randomBetween(0.7, 3.2) * power;
-      particles.push({
-        x, y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - randomBetween(0.1, 1.1),
-        life: randomBetween(16, 30),
-        maxLife: 30,
-        size: randomBetween(0.7, 2.2),
-        color: Math.random() > 0.45 ? "200,255,97" : "112,222,255"
-      });
-      if (particles.length > maxParticles) particles.splice(0, particles.length - maxParticles);
-    };
-
-    const addBurst = (x, y, count = 12) => {
-      for (let i = 0; i < count; i++) addSpark(x, y, randomBetween(0.7, 1.5));
-      arcs.push({
-        points: Array.from({ length: 5 }, (_, i) => ({
-          x: x + Math.cos(i * Math.PI / 2) * randomBetween(2, 16),
-          y: y + Math.sin(i * Math.PI / 2) * randomBetween(2, 16)
-        })),
-        life: 12,
-        maxLife: 12,
-        color: "200,255,97"
-      });
-      if (arcs.length > maxArcs) arcs.shift();
-      requestElectricFrame();
-    };
-
-    const addElectricArc = (from, to) => {
-      const dx = to.x - from.x;
-      const dy = to.y - from.y;
-      const distance = Math.hypot(dx, dy);
-      if (distance < 5) return;
-
-      const segments = Math.max(4, Math.min(10, Math.round(distance / 15)));
-      const points = [{ x: from.x, y: from.y }];
-      for (let i = 1; i < segments; i++) {
-        const ratio = i / segments;
-        const offset = randomBetween(-8, 8);
-        const length = Math.max(1, distance);
-        points.push({
-          x: from.x + dx * ratio + (-dy / length) * offset,
-          y: from.y + dy * ratio + (dx / length) * offset
+      const addSpark = (x, y, scale = 1) => {
+        particles.push({
+          x, y,
+          vx: random(-1.05, 1.05) * scale,
+          vy: random(-1.25, 0.55) * scale,
+          life: random(9, 15),
+          maxLife: 15,
+          size: random(.55, 1.15),
+          color: Math.random() > .5 ? "200,255,97" : "112,222,255"
         });
-      }
-      points.push({ x: to.x, y: to.y });
-      arcs.push({
-        points,
-        life: 10,
-        maxLife: 10,
-        color: Math.random() > 0.35 ? "112,222,255" : "200,255,97"
-      });
-      if (arcs.length > maxArcs) arcs.shift();
+        if (particles.length > MAX_PARTICLES) particles.shift();
+      };
 
-      const sparkCount = Math.min(9, Math.max(3, Math.round(distance / 12)));
-      for (let i = 0; i < sparkCount; i++) {
-        const ratio = (i + Math.random()) / sparkCount;
-        addSpark(from.x + dx * ratio, from.y + dy * ratio, 0.85);
-      }
-      requestElectricFrame();
-    };
+      const addBurst = (point, count = 3) => {
+        for (let i = 0; i < count; i++) addSpark(point.x, point.y, .8);
+        scheduleFrame();
+      };
 
-    const drawElectricFrame = () => {
-      electricFrame = 0;
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
+      const addArc = (from, to) => {
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < MIN_MOVE_DISTANCE) return;
 
-      for (let i = arcs.length - 1; i >= 0; i--) {
-        const arc = arcs[i];
-        const alpha = Math.max(0, arc.life / arc.maxLife);
-        const points = arc.points;
-        if (points.length > 1) {
-          ctx.beginPath();
-          ctx.moveTo(points[0].x, points[0].y);
-          for (let j = 1; j < points.length; j++) ctx.lineTo(points[j].x, points[j].y);
-          ctx.strokeStyle = `rgba(${arc.color},${alpha * 0.28})`;
-          ctx.lineWidth = 7;
-          ctx.shadowColor = `rgba(${arc.color},${alpha})`;
-          ctx.shadowBlur = 15;
-          ctx.stroke();
+        const length = Math.max(1, distance);
+        const segments = Math.min(6, Math.max(3, Math.ceil(distance / 30)));
+        const points = [{ x: from.x, y: from.y }];
 
-          ctx.beginPath();
-          ctx.moveTo(points[0].x, points[0].y);
-          for (let j = 1; j < points.length; j++) ctx.lineTo(points[j].x, points[j].y);
-          ctx.strokeStyle = `rgba(${arc.color},${alpha * 0.9})`;
-          ctx.lineWidth = 1.7;
-          ctx.shadowBlur = 8;
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.moveTo(points[0].x, points[0].y);
-          for (let j = 1; j < points.length; j++) ctx.lineTo(points[j].x, points[j].y);
-          ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.7})`;
-          ctx.lineWidth = 0.65;
-          ctx.shadowBlur = 3;
-          ctx.stroke();
+        for (let i = 1; i < segments; i++) {
+          const ratio = i / segments;
+          const offset = random(-3.2, 3.2);
+          points.push({
+            x: from.x + dx * ratio - (dy / length) * offset,
+            y: from.y + dy * ratio + (dx / length) * offset
+          });
         }
-        arc.life -= 1;
-        if (arc.life <= 0) arcs.splice(i, 1);
+        points.push({ x: to.x, y: to.y });
+
+        arcs.push({
+          points,
+          life: 7,
+          maxLife: 7,
+          color: Math.random() > .4 ? "200,255,97" : "112,222,255"
+        });
+        if (arcs.length > MAX_ARCS) arcs.shift();
+
+        // Only a couple of small sparks per segment.
+        addSpark(to.x, to.y, .7);
+        if (Math.random() > .55) {
+          const mid = points[Math.floor(points.length / 2)];
+          addSpark(mid.x, mid.y, .6);
+        }
+        scheduleFrame();
+      };
+
+      function renderElectricTrail() {
+        frameId = 0;
+        ctx.clearRect(0, 0, width, height);
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        // One fine stroke per bolt, no expensive multi-pass shadow rendering.
+        for (let i = arcs.length - 1; i >= 0; i--) {
+          const arc = arcs[i];
+          const alpha = Math.max(0, arc.life / arc.maxLife) * .42;
+          const pts = arc.points;
+
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x, pts[0].y);
+          for (let j = 1; j < pts.length; j++) ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.strokeStyle = `rgba(${arc.color},${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          arc.life--;
+          if (arc.life <= 0) arcs.splice(i, 1);
+        }
+
+        // Tiny points, rendered without per-particle shadow blur.
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const spark = particles[i];
+          const alpha = Math.max(0, spark.life / spark.maxLife) * .48;
+          spark.x += spark.vx;
+          spark.y += spark.vy;
+          spark.vx *= .94;
+          spark.vy *= .94;
+
+          ctx.beginPath();
+          ctx.arc(spark.x, spark.y, spark.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${spark.color},${alpha})`;
+          ctx.fill();
+
+          spark.life--;
+          if (spark.life <= 0) particles.splice(i, 1);
+        }
+
+        ctx.restore();
+        if (arcs.length || particles.length) frameId = requestAnimationFrame(renderElectricTrail);
       }
 
-      ctx.shadowBlur = 10;
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const spark = particles[i];
-        const alpha = Math.max(0, spark.life / spark.maxLife);
-        spark.x += spark.vx;
-        spark.y += spark.vy;
-        spark.vx *= 0.965;
-        spark.vy = spark.vy * 0.965 + 0.035;
+      const readTouchPoint = touch => ({ x: touch.clientX, y: touch.clientY });
 
-        ctx.beginPath();
-        ctx.arc(spark.x, spark.y, spark.size * alpha, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${spark.color},${alpha})`;
-        ctx.shadowColor = `rgba(${spark.color},${alpha})`;
-        ctx.fill();
+      document.addEventListener("touchstart", event => {
+        const touch = event.changedTouches && event.changedTouches[0];
+        if (!touch) return;
+        lastPoint = readTouchPoint(touch);
+        lastDrawAt = performance.now();
+        moveTouchGlow(lastPoint.x, lastPoint.y);
+        addBurst(lastPoint, 3);
+      }, { passive: true });
 
-        spark.life -= 1;
-        if (spark.life <= 0) particles.splice(i, 1);
-      }
+      document.addEventListener("touchmove", event => {
+        const touch = event.touches && event.touches[0];
+        if (!touch) return;
+        const point = readTouchPoint(touch);
+        moveTouchGlow(point.x, point.y);
 
-      ctx.restore();
-      if (arcs.length || particles.length) electricFrame = window.requestAnimationFrame(drawElectricFrame);
-    };
+        const now = performance.now();
+        if (lastPoint && now - lastDrawAt >= MOVE_INTERVAL) {
+          addArc(lastPoint, point);
+          lastPoint = point;
+          lastDrawAt = now;
+        }
+      }, { passive: true });
 
-    const getTouchPoint = touch => ({ x: touch.clientX, y: touch.clientY });
+      document.addEventListener("touchend", event => {
+        const touch = event.changedTouches && event.changedTouches[0];
+        if (touch) addBurst(readTouchPoint(touch), 2);
+        lastPoint = null;
+        window.clearTimeout(touchFadeTimer);
+        touchFadeTimer = window.setTimeout(() => touchGlow?.classList.remove("active"), 160);
+      }, { passive: true });
 
-    document.addEventListener("touchstart", event => {
-      const finger = event.changedTouches && event.changedTouches[0];
-      if (!finger) return;
-      lastTouch = getTouchPoint(finger);
-      moveTouchGlow(lastTouch.x, lastTouch.y);
-      addBurst(lastTouch.x, lastTouch.y, 15);
-    }, { passive: true });
+      document.addEventListener("touchcancel", () => {
+        lastPoint = null;
+        window.clearTimeout(touchFadeTimer);
+        touchFadeTimer = window.setTimeout(() => touchGlow?.classList.remove("active"), 100);
+      }, { passive: true });
 
-    document.addEventListener("touchmove", event => {
-      const finger = event.touches && event.touches[0];
-      if (!finger) return;
-      const point = getTouchPoint(finger);
-      moveTouchGlow(point.x, point.y);
-      if (lastTouch) addElectricArc(lastTouch, point);
-      lastTouch = point;
-    }, { passive: true });
-
-    document.addEventListener("touchend", event => {
-      const finger = event.changedTouches && event.changedTouches[0];
-      const point = finger ? getTouchPoint(finger) : lastTouch;
-      if (point) addBurst(point.x, point.y, 10);
-      lastTouch = null;
-      window.clearTimeout(touchFadeTimer);
-      touchFadeTimer = window.setTimeout(() => touchGlow?.classList.remove("active"), 220);
-    }, { passive: true });
-
-    document.addEventListener("touchcancel", () => {
-      lastTouch = null;
-      window.clearTimeout(touchFadeTimer);
-      touchFadeTimer = window.setTimeout(() => touchGlow?.classList.remove("active"), 120);
-    }, { passive: true });
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          if (frameId) cancelAnimationFrame(frameId);
+          frameId = 0;
+          particles.length = 0;
+          arcs.length = 0;
+          ctx.clearRect(0, 0, width, height);
+        }
+      });
+    }
   }
 
     // Desktop-only pointer tilt; phones use the calmer scroll-linked movement above.
