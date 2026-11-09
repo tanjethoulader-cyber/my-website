@@ -1,30 +1,27 @@
-# Tanjet Hawlader — Personal Portfolio
+TANJET HAWLADER — PERSONAL PORTFOLIO
+====================================
 
-A responsive single-page personal portfolio built with plain HTML, CSS and JavaScript.
+HOW TO OPEN (WINDOWS)
+1. Download this ZIP to your computer.
+2. Right-click the ZIP and choose "Extract All...".
+3. Open the extracted folder.
+4. Double-click "START PORTFOLIO.bat".
+   Or double-click index.html.
 
-## Files
-- `index.html` — website structure and CV-based content
-- `css/style.css` — responsive styling, light/dark themes and animations
-- `js/main.js` — navigation, theme preference, scroll progress, reveal effects and contact form
-- `assets/Tanjet-Hawlader-CV.pdf` — the CV supplied for this portfolio
-- `assets/favicon.svg` — browser tab icon
-- `assets/og-cover.svg` — social sharing cover graphic
+IMPORTANT
+Do not preview/open index.html from inside the ZIP.
+Extract the entire ZIP first. Keep index.html beside the css, js and assets folders.
 
-## Run locally
-1. Extract the ZIP.
-2. Open `index.html` in a modern browser.
+PROJECT FILES
+- index.html — website structure
+- css/style.css — responsive design
+- js/main.js — menu, theme, scroll and contact interactions
+- assets/Tanjet-Hawlader-CV.pdf — CV download
+- assets/favicon.svg — browser icon
+- assets/og-cover.svg — social sharing cover
+- START PORTFOLIO.bat — opens the website in your default browser
 
-Optional local server:
-```bash
-python -m http.server 8000
-```
-Then visit `http://localhost:8000`.
+CONTACT FORM
+The contact form opens the visitor's email app with a prepared message. It does not store or send messages through a server. Direct server-side submissions require a backend/form service.
 
-## Deploy
-Upload the contents of this folder to a static host such as GitHub Pages, Netlify, Vercel or the `public_html` folder in cPanel. Keep `index.html` alongside the `css`, `js` and `assets` folders.
-
-## Contact form
-The contact form currently uses `mailto:`. It opens the visitor's configured email app with the message prepared; it does not submit to a server or store messages. To receive messages without opening an email app, connect a backend or form service and update `js/main.js`.
-
-## Content accuracy
-Website details are based on the supplied CV. No unverified client names, campaign results, metrics, awards or certifications have been added. Review contact details and the LinkedIn URL before publishing.
+The content is based on the supplied CV. Check phone, email and LinkedIn details before publishing.
